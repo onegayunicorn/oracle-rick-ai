@@ -48,7 +48,7 @@ export class PiperProvider implements VoiceProvider {
       formats: ['wav', 'pcm', 'mp3'],
       emotions: ['idle', 'rant', 'sarcasm', 'serious', 'drunk', 'excited'],
       local: true,
-      notes: 'ONNX local; variant selected by hardware selector (Q4_K_M / Q8_0 / base)',
+      notes: 'ONNX local; variant selected from verified fp32/fp16/int8 candidates',
     };
   }
 
