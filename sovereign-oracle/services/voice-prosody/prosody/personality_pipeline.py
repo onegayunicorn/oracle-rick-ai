@@ -1,38 +1,37 @@
 """
-End-to-end Rick personality transform.
-Piper raw WAV → cadence / pitch / formants / volume / optional wobble → Rick audio.
+Complete Rick personality transform — verified chain.
+
+  Piper raw → cadence → pitch/wobble → formant → gain → burps → soft-limit
+
+On any DSP failure, callers should fall back to clean Piper audio
+(this module raises rather than returning NaN).
 """
 
 from __future__ import annotations
 
 import numpy as np
 
+from .burp_injector import inject_burps
 from .formant_shifter import shift_formants
-from .phase_vocoder import time_stretch
 from .rick_profile import resolve_profile
+from .wobble import apply_time_varying_pitch, generate_wobble_curve
 
 try:
     import librosa
 except ImportError:
     librosa = None  # type: ignore
 
+from .phase_vocoder import time_stretch as pv_time_stretch
 
-def apply_rick_personality(
+
+def apply_personality(
     audio: np.ndarray,
     sr: int = 22050,
-    mode: str = "idle",
+    emotion: str = "idle",
+    burp_prob: float | None = None,
+    seed: int | None = None,
 ) -> np.ndarray:
-    """
-    Full personality transform.
-
-    Order:
-      1. Time stretch (cadence)
-      2. Pitch shift (F0)
-      3. Formant shift (vocal tract)
-      4. Volume gain
-      5. Optional pitch wobble (drunk / unsteady)
-    """
-    p = resolve_profile(mode)
+    p = resolve_profile(emotion)
     y = np.asarray(audio, dtype=np.float32).copy()
     if y.ndim > 1:
         y = y.mean(axis=-1)
@@ -42,11 +41,29 @@ def apply_rick_personality(
         if librosa is not None:
             y = librosa.effects.time_stretch(y, rate=rate)
         else:
-            y = time_stretch(y, rate=rate)
+            y = pv_time_stretch(y, rate=rate)
 
-    n_steps = float(p.get("pitch_shift", 0.0))
-    if abs(n_steps) > 1e-3 and librosa is not None:
-        y = librosa.effects.pitch_shift(y, sr=sr, n_steps=n_steps)
+    base_shift = float(p.get("pitch_shift", 0.0))
+    wobble_amp = float(p.get("pitch_wobble", 0.0))
+    fft_size, hop_size = 2048, 512
+    n_frames = 1 + max(0, (len(y) - fft_size) // hop_size)
+
+    if wobble_amp > 1e-4 and n_frames > 1:
+        curve = generate_wobble_curve(
+            n_frames,
+            sr,
+            hop_size,
+            base_shift_semitones=base_shift,
+            wobble_amplitude_semitones=wobble_amp,
+            seed=seed,
+        )
+        y = apply_time_varying_pitch(y, sr, curve, fft_size=fft_size, hop_size=hop_size)
+    elif abs(base_shift) > 1e-3:
+        if librosa is not None:
+            y = librosa.effects.pitch_shift(y, sr=sr, n_steps=base_shift)
+        else:
+            curve = np.full(max(1, n_frames), base_shift, dtype=np.float64)
+            y = apply_time_varying_pitch(y, sr, curve, fft_size=fft_size, hop_size=hop_size)
 
     formant = float(p.get("formant_scale", 1.0))
     if abs(formant - 1.0) > 1e-3:
@@ -56,15 +73,22 @@ def apply_rick_personality(
     if abs(gain_db) > 1e-3:
         y = y * (10.0 ** (gain_db / 20.0))
 
-    wobble = float(p.get("pitch_wobble", 0.0))
-    if wobble > 1e-3 and librosa is not None:
-        detuned = librosa.effects.pitch_shift(y, sr=sr, n_steps=wobble)
-        t = np.linspace(0, 2 * np.pi * 3, len(y), endpoint=False)
-        mix = 0.5 + 0.5 * np.sin(t)
-        y = y * (1.0 - 0.35 * mix) + detuned * (0.35 * mix)
+    bp = float(p.get("burp_prob", 0.0)) if burp_prob is None else float(burp_prob)
+    if bp > 0:
+        y = inject_burps(y, sr, prob=bp, seed=seed)
 
+    if np.any(~np.isfinite(y)):
+        raise ValueError("NaN/Inf in personality output — DSP failure")
     peak = float(np.max(np.abs(y)) or 1.0)
     if peak > 0.98:
-        y = y / peak * 0.98
+        y = y / peak * 0.95
 
     return y.astype(np.float32)
+
+
+def apply_rick_personality(
+    audio: np.ndarray,
+    sr: int = 22050,
+    mode: str = "idle",
+) -> np.ndarray:
+    return apply_personality(audio, sr=sr, emotion=mode)

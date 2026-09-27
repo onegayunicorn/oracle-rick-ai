@@ -1,6 +1,7 @@
 """
-Rick C-137 emotional prosody profiles.
-Maps emotion tags from /v1/speech → DSP parameters.
+Verified Rick C-137 emotional prosody profiles.
+Natural F0 range ~100–175 Hz (low-mid baritone).
+formant_scale < 1.0 → deeper / throatier vocal tract.
 """
 
 from __future__ import annotations
@@ -13,64 +14,78 @@ EmotionMode = Literal[
 
 
 class Profile(TypedDict, total=False):
-    pitch_shift: float
     time_stretch: float
+    pitch_shift: float
     formant_scale: float
     volume_gain: float
     pause_factor: float
     pitch_wobble: float
+    burp_prob: float
 
 
 RICK_PROFILE: Dict[EmotionMode, Profile] = {
     "idle": {
-        "pitch_shift": -0.5,
         "time_stretch": 0.92,
+        "pitch_shift": -1.0,
         "formant_scale": 0.92,
         "volume_gain": 0.0,
         "pause_factor": 1.0,
+        "pitch_wobble": 0.0,
+        "burp_prob": 0.02,
     },
     "rant": {
-        "pitch_shift": 0.4,
         "time_stretch": 1.08,
+        "pitch_shift": 0.4,
         "formant_scale": 0.94,
         "volume_gain": 2.0,
         "pause_factor": 0.7,
+        "pitch_wobble": 0.05,
+        "burp_prob": 0.08,
     },
     "sarcasm": {
-        "pitch_shift": -0.6,
         "time_stretch": 0.85,
+        "pitch_shift": -1.5,
         "formant_scale": 0.90,
-        "volume_gain": -1.5,
+        "volume_gain": -2.0,
         "pause_factor": 1.5,
+        "pitch_wobble": 0.03,
+        "burp_prob": 0.03,
     },
     "serious": {
-        "pitch_shift": -0.8,
         "time_stretch": 0.88,
+        "pitch_shift": -1.2,
         "formant_scale": 0.91,
         "volume_gain": 1.0,
         "pause_factor": 1.4,
+        "pitch_wobble": 0.02,
+        "burp_prob": 0.01,
     },
     "drunk": {
-        "pitch_shift": 0.15,
-        "time_stretch": 0.78,
+        "time_stretch": 0.80,
+        "pitch_shift": -0.8,
         "formant_scale": 0.93,
-        "volume_gain": -2.0,
+        "volume_gain": -2.5,
         "pause_factor": 2.0,
-        "pitch_wobble": 0.12,
+        "pitch_wobble": 0.15,
+        "burp_prob": 0.12,
     },
     "excited": {
-        "pitch_shift": 0.6,
         "time_stretch": 1.12,
+        "pitch_shift": 0.6,
         "formant_scale": 0.95,
         "volume_gain": 2.5,
-        "pause_factor": 0.6,
+        "pause_factor": 0.8,
+        "pitch_wobble": 0.08,
+        "burp_prob": 0.06,
     },
     "tech": {
-        "pitch_shift": -0.3,
         "time_stretch": 0.95,
+        "pitch_shift": -0.5,
         "formant_scale": 0.93,
         "volume_gain": 0.5,
-        "pause_factor": 1.1,
+        "pause_factor": 1.2,
+        "pitch_wobble": 0.01,
+        "burp_prob": 0.0,
     },
 }
 
