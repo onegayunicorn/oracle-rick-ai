@@ -31,7 +31,7 @@ find_base() {
 
 if [ "$REQUESTED" != "auto" ]; then
   case "$REQUESTED" in
-    Q4_K_M|Q5_K_M|Q8_0|FP16|FP32) MODEL="$(find_variant "$REQUESTED" || true)" ;;
+    Q4_K_M|Q5_K_M|Q8_0|Q4_0|FP16|FP32) MODEL="$(find_variant "$REQUESTED" || true)" ;;
     base) MODEL="$(find_base || true)" ;;
     *) echo "Unsupported RICK_MODEL_VARIANT=$REQUESTED" >&2; exit 2 ;;
   esac
