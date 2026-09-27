@@ -1,0 +1,5 @@
+{"dashboard": {"title": "Sovereign Oracle", "panels": [
+  {"id": 1, "title": "EM-001..007 Pattern Oscillators", "type": "timeseries"},
+  {"id": 2, "title": "Lux / CCT Telemetry", "type": "timeseries"},
+  {"id": 3, "title": "Piper TTS Latency", "type": "stat"}
+]}}

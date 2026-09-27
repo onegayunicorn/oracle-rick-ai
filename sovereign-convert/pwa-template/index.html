@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#22d3ee" />
+  <title>Converted App</title>
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+  <div id="app">
+    <h1>Loading app…</h1>
+    <canvas id="screen" width="640" height="400"></canvas>
+    <div id="controls"></div>
+  </div>
+  <script src="js/dos-runner.js"></script>
+  <script src="js/converter-ui.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  </script>
+</body>
+</html>

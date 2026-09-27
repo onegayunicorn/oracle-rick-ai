@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - TICK_RATE_MS=50
+      - LOG_LEVEL=debug
+      - AUTH_SECRET=dev-secret-key-32-chars-minimum
+    volumes:
+      - ../backend/src:/app/backend/src
+      - ../shared:/app/shared
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_WS_ENDPOINT=ws://localhost:3000
+    volumes:
+      - ../frontend/src:/app/frontend/src
+      - ../frontend/public:/app/frontend/public
+      - ../shared:/app/shared

@@ -1,0 +1,6 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #000; color: #e2e8f0; font-family: system-ui; overflow: hidden; }
+#root { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+.hud { position: absolute; top: 12px; left: 12px; z-index: 10; background: rgba(15,23,42,0.7); padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; }
+.hud .value { color: #22d3ee; font-weight: bold; }
+canvas { display: block; }

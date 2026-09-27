@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  fish-tts-api:
+    build:
+      context: .
+      dockerfile: skill/rick-sanchez-voice/scripts/integrations/fastapi_server.Dockerfile
+    container_name: rick-tts-service
+    environment:
+      - FISH_API_KEY=${FISH_API_KEY}
+      - FISH_VOICE_ID=${FISH_VOICE_ID:-d2e75a3e3fd6419893057c02a375a113}
+      - FISH_MODEL=${FISH_MODEL:-s2.1-pro-free}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: orchestrator/Dockerfile
+    container_name: rick-orchestrator
+    ports:
+      - "8002:8002"
+    environment:
+      - FISH_API_KEY=${FISH_API_KEY}
+      - FISH_VOICE_ID=${FISH_VOICE_ID:-d2e75a3e3fd6419893057c02a375a113}
+      - FISH_MODEL=${FISH_MODEL:-s2.1-pro-free}
+    restart: unless-stopped
+    depends_on:
+      fish-tts-api:
+        condition: service_healthy
+
+  pwa-dashboard:
+    build:
+      context: .
+      dockerfile: pwa-dashboard/Dockerfile
+    container_name: rick-tts-pwa
+    ports:
+      - "8080:80"
+    environment:
+      - VITE_ORCHESTRATOR_URL=http://localhost:8002
+    restart: unless-stopped
+
+  discord-bot:
+    build:
+      context: .
+      dockerfile: skill/rick-sanchez-voice/scripts/integrations/discord_bot.Dockerfile
+    container_name: rick-tts-discord
+    environment:
+      - FISH_API_KEY=${FISH_API_KEY}
+      - FISH_VOICE_ID=${FISH_VOICE_ID:-d2e75a3e3fd6419893057c02a375a113}
+      - FISH_MODEL=${FISH_MODEL:-s2.1-pro-free}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - DISCORD_REDIRECT_URI=${DISCORD_REDIRECT_URI:-http://localhost:8001/callback}
+    restart: unless-stopped
+    depends_on:
+      - orchestrator

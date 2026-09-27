@@ -1,0 +1,9 @@
+{
+  "name": "fish-voice-node",
+  "version": "0.2.0",
+  "description": "Zero-dependency Fish Audio TTS client for Node.js >= 18",
+  "main": "index.js",
+  "bin": { "rick-tts-node": "cli.js" },
+  "type": "commonjs",
+  "engines": { "node": ">=18" }
+}

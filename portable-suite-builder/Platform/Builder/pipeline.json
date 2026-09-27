@@ -1,0 +1,1 @@
+{"stages": ["build_skeleton", "validate", "sign", "manifest", "package"], "output": "zip"}

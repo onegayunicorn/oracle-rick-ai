@@ -1,0 +1,5 @@
+# Bubblewrap APK signing — copy to signing-env.sh and fill in.
+export TWA_SIGNING_KEY_ALIAS=mykey
+export TWA_SIGNING_KEY_PASSWORD=change-me
+export TWA_SIGNING_STORE_PASSWORD=change-me
+export TWA_SIGNING_KEY_PATH=./config/signing.keystore

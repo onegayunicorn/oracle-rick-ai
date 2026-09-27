@@ -1,0 +1,1 @@
+# Operations Manual\n\nSee README.md. Stages: build -> validate -> sign -> manifest -> package.\n

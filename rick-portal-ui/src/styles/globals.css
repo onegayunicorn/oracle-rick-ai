@@ -1,0 +1,66 @@
+:root {
+  --bg-main: #000000;
+  --bg-panel: #0A0A0A;
+  --bg-glass: rgba(10, 10, 10, 0.75);
+
+  --portal-green: #00FFAA;
+  --portal-blue: #44AAFF;
+  --portal-orange: #FF7A45;
+  --portal-magenta: #FF45E0;
+
+  --success: #22C55E;
+  --warning: #FFCC00;
+  --danger: #FF4444;
+
+  --text-primary: #E5E5E5;
+  --text-secondary: #B8B8B8;
+  --text-muted: #888888;
+
+  --border-glow: rgba(0, 255, 170, 0.3);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; background: var(--bg-main); color: var(--text-primary); font-family: system-ui, sans-serif; }
+
+/* Typography */
+.font-telemetry { font-family: "JetBrains Mono", monospace; letter-spacing: 0.05em; }
+
+/* Glass card */
+.portal-card {
+  background: rgba(10, 10, 10, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+}
+
+/* Active portal glow */
+.portal-glow {
+  box-shadow:
+    0 0 20px rgba(0, 255, 170, 0.2),
+    0 0 50px rgba(0, 255, 170, 0.1);
+}
+
+/* Status badges */
+.status-online  { background: rgba(0, 255, 170, 0.13); color: var(--portal-green); }
+.status-thinking{ background: rgba(255, 204, 0, 0.13); color: var(--warning); }
+.status-error   { background: rgba(255, 68, 68, 0.13); color: var(--danger); }
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+}
+
+/* Motion system */
+@keyframes portal-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.portal-ring-12s { animation: portal-rotate 12s linear infinite; }
+@keyframes glow-pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+.glow-pulse { animation: glow-pulse 1.2s ease-in-out infinite; }
+
+/* Responsive grid: mobile / tablet / desktop */
+.app-grid {
+  display: grid;
+  height: 100vh;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px)  { .app-grid { grid-template-columns: 80px 1fr; } }
+@media (min-width: 1024px) { .app-grid { grid-template-columns: 280px 1fr 320px; } }

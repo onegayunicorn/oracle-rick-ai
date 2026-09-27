@@ -1,0 +1,7 @@
+node_modules/
+dist/
+builds/
+*.apk
+*.p12
+.keystore
+.env

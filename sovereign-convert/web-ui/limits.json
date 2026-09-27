@@ -1,0 +1,1 @@
+{ "maxUploadMB": 200, "allowedTypes": [".exe", ".msi", ".bat", ".cmd", ".sh", ".html", ".zip"] }

@@ -1,0 +1,4 @@
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.0
+fish-voice>=0.2.0

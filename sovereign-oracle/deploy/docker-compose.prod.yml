@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3 QUIC
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - oracle_net
+
+  backend:
+    image: ghcr.io/your-org/sovereign-oracle-backend:latest
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TICK_RATE_MS=50
+      - LOG_LEVEL=info
+      - CORS_ORIGIN=https://oracle.yourdomain.com
+      - AUTH_TOKEN=${BACKEND_AUTH_SECRET}
+    networks:
+      - oracle_net
+    deploy:
+      resources:
+        limits: { cpus: '1.5', memory: 1024M }
+        reservations: { cpus: '0.2', memory: 256M }
+
+  frontend:
+    image: ghcr.io/your-org/sovereign-oracle-frontend:latest
+    restart: unless-stopped
+    networks:
+      - oracle_net
+
+networks:
+  oracle_net: { driver: bridge }
+
+volumes:
+  caddy_data:
+  caddy_config:

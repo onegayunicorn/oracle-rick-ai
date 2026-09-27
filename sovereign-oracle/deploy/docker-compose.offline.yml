@@ -1,0 +1,42 @@
+# Full air-gapped stack: Caddy + Nexus + Piper TTS + Ollama LLM
+version: '3.8'
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    networks: [oracle_net]
+
+  backend:
+    build: { context: .., dockerfile: backend/Dockerfile }
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TICK_RATE_MS=50
+      - OLLAMA_URL=http://llm:11434
+      - PIPER_URL=http://piper-tts:8000
+      - AUTH_TOKEN=${BACKEND_AUTH_SECRET}
+    networks: [oracle_net]
+
+  piper-tts:
+    build: { context: .., dockerfile: services/piper-tts/Dockerfile }
+    restart: unless-stopped
+    networks: [oracle_net]
+
+  llm:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes: ["ollama:/root/.ollama"]
+    networks: [oracle_net]
+
+  frontend:
+    build: { context: .., dockerfile: frontend/Dockerfile }
+    restart: unless-stopped
+    networks: [oracle_net]
+
+networks: { oracle_net: { driver: bridge } }
+volumes: { caddy_data: {}, ollama: {} }

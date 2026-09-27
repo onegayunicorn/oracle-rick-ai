@@ -1,0 +1,28 @@
+{
+  email ops@sovereign-oracle.internal
+  admin off
+}
+
+oracle.yourdomain.com {
+  encode zstd gzip
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    Content-Security-Policy "default-src 'self'; connect-src 'self' wss://oracle.yourdomain.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; worker-src 'self';"
+  }
+
+  handle /socket.io/* {
+    reverse_proxy backend:3000 {
+      header_up Host {host}
+      header_up X-Real-IP {remote_host}
+    }
+  }
+
+  handle /api/* { reverse_proxy backend:3000 }
+  handle /healthz { reverse_proxy backend:3000 }
+
+  handle { reverse_proxy frontend:80 }
+}

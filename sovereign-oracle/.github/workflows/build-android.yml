@@ -1,0 +1,14 @@
+name: Build Android APK
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: 'temurin', java-version: '17' }
+      - run: cd android-bridge && ./gradlew assembleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oracle-bridge-apk
+          path: android-bridge/app/build/outputs/apk/release/*.apk

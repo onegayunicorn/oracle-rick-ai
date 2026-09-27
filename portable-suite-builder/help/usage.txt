@@ -1,0 +1,1 @@
+portable_suite build --input <dir> --name <SuiteName> [--version x.y.z] [--apps a b c]

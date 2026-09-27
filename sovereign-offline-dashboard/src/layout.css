@@ -1,0 +1,9 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a0f; color: #e2e8f0; font-family: system-ui; }
+header { display: flex; justify-content: space-between; padding: 16px 24px; background: #111827; border-bottom: 1px solid #1f2937; }
+header h1 { color: #22d3ee; font-size: 1.1rem; }
+#model-badge { font-size: 0.75rem; color: #94a3b8; }
+nav { display: flex; gap: 4px; padding: 8px 24px; background: #0f172a; }
+nav button { background: transparent; border: none; color: #94a3b8; padding: 8px 16px; cursor: pointer; border-radius: 6px; }
+nav button.active { background: #22d3ee; color: #0a0a0f; font-weight: bold; }
+main { padding: 24px; max-width: 900px; margin: 0 auto; }
