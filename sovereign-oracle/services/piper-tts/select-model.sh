@@ -11,9 +11,9 @@ arch="$(uname -m 2>/dev/null || echo unknown)"
 mem_mb="$(awk '/MemTotal:/ {printf "%d", $2/1024; exit}' /proc/meminfo 2>/dev/null || echo 0)"
 
 case "$arch" in
-  aarch64|arm64) AUTO_ORDER="Q4_K_M Q5_K_M Q8_0 FP16 FP32" ;;
-  x86_64|amd64) AUTO_ORDER="Q8_0 Q5_K_M Q4_K_M FP16 FP32" ;;
-  *) AUTO_ORDER="Q8_0 Q5_K_M Q4_K_M FP16 FP32" ;;
+  aarch64|arm64) AUTO_ORDER="Q4_K_M Q5_K_M Q8_0 Q4_0 FP16 FP32" ;;
+  x86_64|amd64) AUTO_ORDER="Q8_0 Q5_K_M Q4_K_M Q4_0 FP16 FP32" ;;
+  *) AUTO_ORDER="Q8_0 Q5_K_M Q4_K_M Q4_0 FP16 FP32" ;;
 esac
 
 find_variant() {
