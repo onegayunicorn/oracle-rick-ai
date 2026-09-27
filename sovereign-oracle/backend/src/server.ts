@@ -3,6 +3,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { NexusEngine } from './engine/nexus.js';
 import { SensorPayloadSchema } from '@oracle/shared';
 import { handleVoiceRoutes } from './voice/http-handler.js';
+import { voiceHealth } from './voice/index.js';
 
 const PORT = Number(process.env.PORT || 3000);
 const TICK_MS = Number(process.env.TICK_RATE_MS || 50);
@@ -16,8 +17,9 @@ const server = http.createServer(async (req, res) => {
   if (await handleVoiceRoutes(req, res)) return;
 
   if (req.url === '/healthz') {
+    const voice = await voiceHealth();
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', tick: engine.state.tick }));
+    res.end(JSON.stringify({ status: 'ok', tick: engine.state.tick, providers: voice.providers, active: voice.active }));
     return;
   }
   if (req.url === '/api/state') {
