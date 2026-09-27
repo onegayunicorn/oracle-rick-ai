@@ -1,42 +1,79 @@
 # Full air-gapped stack: Caddy + Nexus + Piper TTS + Ollama LLM
-version: '3.8'
+version: "3.8"
 services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
     ports: ["80:80", "443:443", "443:443/udp"]
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
     networks: [oracle_net]
-
   backend:
     build: { context: .., dockerfile: backend/Dockerfile }
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - TICK_RATE_MS=50
-      - OLLAMA_URL=http://llm:11434
-      - PIPER_URL=http://piper-tts:8000
-      - AUTH_TOKEN=${BACKEND_AUTH_SECRET}
+      NODE_ENV: production
+      PORT: "3000"
+      TICK_RATE_MS: "50"
+      OLLAMA_URL: http://llm:11434
+      PIPER_URL: http://piper-tts:8000
+      AUTH_TOKEN: ${BACKEND_AUTH_SECRET}
+    depends_on:
+      piper-tts: { condition: service_healthy }
+      llm: { condition: service_started }
     networks: [oracle_net]
-
+  piper-model-selector:
+    image: alpine:3.20
+    restart: "no"
+    environment:
+      RICK_MODEL_VARIANT: ${RICK_MODEL_VARIANT:-auto}
+    volumes:
+      - ../services/piper-tts/models:/models:ro
+      - piper_runtime:/runtime
+      - ../services/piper-tts/select-model.sh:/select-model.sh:ro
+    entrypoint: ["/bin/sh", "/select-model.sh"]
+    networks: [oracle_net]
   piper-tts:
     build: { context: .., dockerfile: services/piper-tts/Dockerfile }
     restart: unless-stopped
+    depends_on:
+      piper-model-selector: { condition: service_completed_successfully }
+    environment:
+      PIPER_MODEL: /app/models/rick_c137.onnx
+      PIPER_CONFIG: /app/models/rick_c137.onnx.json
+    volumes:
+      - ../services/piper-tts/models:/app/models:ro
+      - piper_runtime:/runtime:ro
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        test -s /runtime/model.env
+        set -a
+        . /runtime/model.env
+        set +a
+        echo "Piper: ${RICK_MODEL_VARIANT} (${RICK_HW_ARCH}, ${RICK_HW_MEM_MB} MB RAM)"
+        echo "Piper model: ${RICK_MODEL_PATH}"
+        exec python3 -m uvicorn server:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import json,urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8000/healthz',timeout=3); d=json.load(r); sys.exit(0 if d.get('status') == 'ok' else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     networks: [oracle_net]
-
   llm:
     image: ollama/ollama:latest
     restart: unless-stopped
     volumes: ["ollama:/root/.ollama"]
     networks: [oracle_net]
-
   frontend:
     build: { context: .., dockerfile: frontend/Dockerfile }
     restart: unless-stopped
     networks: [oracle_net]
-
 networks: { oracle_net: { driver: bridge } }
-volumes: { caddy_data: {}, ollama: {} }
+volumes:
+  caddy_data: {}
+  ollama: {}
+  piper_runtime: {}
