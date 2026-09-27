@@ -2,6 +2,7 @@ import http from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { NexusEngine } from './engine/nexus.js';
 import { SensorPayloadSchema } from '@oracle/shared';
+import { handleVoiceRoutes } from './voice/http-handler.js';
 
 const PORT = Number(process.env.PORT || 3000);
 const TICK_MS = Number(process.env.TICK_RATE_MS || 50);
@@ -10,7 +11,10 @@ const AUTH_TOKEN = process.env.AUTH_TOKEN || '';
 const engine = new NexusEngine(TICK_MS);
 const clients = new Set<WebSocket>();
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
+  // Unified voice contract — /v1/speech, /v1/audio/speech, /v1/voice/*
+  if (await handleVoiceRoutes(req, res)) return;
+
   if (req.url === '/healthz') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok', tick: engine.state.tick }));
@@ -61,5 +65,8 @@ engine.onTick = (state) => {
 
 engine.start();
 server.listen(PORT, () => {
-  console.log(`[oracle] nexus engine listening on :${PORT} (tick ${TICK_MS}ms = ${1000 / TICK_MS}Hz)`);
+  console.log(
+    `[oracle] nexus + voice listening on :${PORT} (tick ${TICK_MS}ms = ${1000 / TICK_MS}Hz)`
+  );
+  console.log(`[oracle] POST /v1/speech  GET /v1/voice/capabilities`);
 });
