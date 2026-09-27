@@ -1,9 +1,15 @@
-RICK C-137 Bundle Manifest (v3 — 7 projects incl. rick-portal-ui)
+RICK C-137 Bundle Manifest (v4 — + OPERATIONS_MANUAL.md)
 ============================================================
-Total files: 362
+Total files: 368
 
+     168  rick-c137-bundle/.git/COMMIT_EDITMSG
+      21  rick-c137-bundle/.git/HEAD
+     337  rick-c137-bundle/.git/config
+      73  rick-c137-bundle/.git/description
+   48467  rick-c137-bundle/.git/index
  2089465  rick-c137-bundle/BLUEPRINT-RICK-C137.pdf
        0  rick-c137-bundle/MANIFEST.txt
+   23617  rick-c137-bundle/OPERATIONS_MANUAL.md
     4722  rick-c137-bundle/README.md
      417  rick-c137-bundle/paf-builder/APK_ANALYSIS.md
      166  rick-c137-bundle/paf-builder/Makefile
