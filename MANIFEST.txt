@@ -1,12 +1,11 @@
-RICK C-137 Bundle Manifest (v4 — + OPERATIONS_MANUAL.md)
-============================================================
-Total files: 368
+RICK C-137 Bundle Manifest (v5)
+Total files: 389
 
-     168  rick-c137-bundle/.git/COMMIT_EDITMSG
+      75  rick-c137-bundle/.git/COMMIT_EDITMSG
       21  rick-c137-bundle/.git/HEAD
      337  rick-c137-bundle/.git/config
       73  rick-c137-bundle/.git/description
-   48467  rick-c137-bundle/.git/index
+   48555  rick-c137-bundle/.git/index
  2089465  rick-c137-bundle/BLUEPRINT-RICK-C137.pdf
        0  rick-c137-bundle/MANIFEST.txt
    23617  rick-c137-bundle/OPERATIONS_MANUAL.md
@@ -94,6 +93,8 @@ Total files: 368
       33  rick-c137-bundle/rick-portal-ui/.gitignore
     1462  rick-c137-bundle/rick-portal-ui/README.md
      879  rick-c137-bundle/rick-portal-ui/docs/DESIGN_SYSTEM.md
+     699  rick-c137-bundle/rick-portal-ui/docs/DESIGN_SYSTEM_V1.md
+     502  rick-c137-bundle/rick-portal-ui/docs/MOBILE_WIDGETS.md
      400  rick-c137-bundle/rick-portal-ui/docs/MOTION_SYSTEM.md
      666  rick-c137-bundle/rick-portal-ui/docs/VISUAL_ASSETS.md
      417  rick-c137-bundle/rick-portal-ui/docs/WIDGETS.md
@@ -106,7 +107,7 @@ Total files: 368
  4982784  rick-c137-bundle/rick-portal-ui/docs/references/reference-concept-2.png
      368  rick-c137-bundle/rick-portal-ui/index.html
      313  rick-c137-bundle/rick-portal-ui/jsconfig.json
-     622  rick-c137-bundle/rick-portal-ui/package.json
+     648  rick-c137-bundle/rick-portal-ui/package.json
       81  rick-c137-bundle/rick-portal-ui/postcss.config.js
      273  rick-c137-bundle/rick-portal-ui/public/assets/avatar/README.md
       38  rick-c137-bundle/rick-portal-ui/public/assets/avatar/animations/idle.glb.placeholder
@@ -116,31 +117,50 @@ Total files: 368
       42  rick-c137-bundle/rick-portal-ui/public/assets/avatar/animations/thinking.glb.placeholder
       38  rick-c137-bundle/rick-portal-ui/public/assets/avatar/animations/walk.glb.placeholder
       49  rick-c137-bundle/rick-portal-ui/public/assets/textures/README.md
+     395  rick-c137-bundle/rick-portal-ui/public/assets/videos/README.md
+   54091  rick-c137-bundle/rick-portal-ui/public/assets/videos/avatar-lab-loop-poster.jpg
+ 3716319  rick-c137-bundle/rick-portal-ui/public/assets/videos/avatar-lab-loop.mp4
+   49656  rick-c137-bundle/rick-portal-ui/public/assets/videos/avatar-portal-loop-poster.jpg
+ 3965484  rick-c137-bundle/rick-portal-ui/public/assets/videos/avatar-portal-loop.mp4
+   62093  rick-c137-bundle/rick-portal-ui/public/assets/videos/dashboard-idle-poster.jpg
+ 4283136  rick-c137-bundle/rick-portal-ui/public/assets/videos/dashboard-idle.mp4
+   64304  rick-c137-bundle/rick-portal-ui/public/assets/videos/dashboard-talk-poster.jpg
+ 3727524  rick-c137-bundle/rick-portal-ui/public/assets/videos/dashboard-talk.mp4
+   64719  rick-c137-bundle/rick-portal-ui/public/assets/videos/design-system-poster.jpg
+ 3958334  rick-c137-bundle/rick-portal-ui/public/assets/videos/design-system.mp4
+   67665  rick-c137-bundle/rick-portal-ui/public/assets/videos/mobile-widgets-poster.jpg
+ 3792527  rick-c137-bundle/rick-portal-ui/public/assets/videos/mobile-widgets.mp4
       42  rick-c137-bundle/rick-portal-ui/public/icons/README.md
      357  rick-c137-bundle/rick-portal-ui/public/manifest.json
-     776  rick-c137-bundle/rick-portal-ui/src/App.jsx
+    1159  rick-c137-bundle/rick-portal-ui/src/App.jsx
+    3328  rick-c137-bundle/rick-portal-ui/src/components/design/DesignSystemShowcase.jsx
+    2572  rick-c137-bundle/rick-portal-ui/src/components/layout/BottomRow.jsx
     1014  rick-c137-bundle/rick-portal-ui/src/components/layout/DesktopSidebar.jsx
-     799  rick-c137-bundle/rick-portal-ui/src/components/layout/Header.jsx
+    1436  rick-c137-bundle/rick-portal-ui/src/components/layout/Header.jsx
     1471  rick-c137-bundle/rick-portal-ui/src/components/layout/MobileDrawer.jsx
      687  rick-c137-bundle/rick-portal-ui/src/components/layout/MobileNav.jsx
     1431  rick-c137-bundle/rick-portal-ui/src/components/layout/PromptBar.jsx
+    1446  rick-c137-bundle/rick-portal-ui/src/components/layout/Sidebar.jsx
      538  rick-c137-bundle/rick-portal-ui/src/components/layout/VoiceConsole.jsx
      299  rick-c137-bundle/rick-portal-ui/src/components/panels/DownloadsPanel.jsx
      321  rick-c137-bundle/rick-portal-ui/src/components/panels/HistoryPanel.jsx
      501  rick-c137-bundle/rick-portal-ui/src/components/panels/InventionsPanel.jsx
+    2688  rick-c137-bundle/rick-portal-ui/src/components/panels/RightColumn.jsx
      319  rick-c137-bundle/rick-portal-ui/src/components/panels/SettingsPanel.jsx
      739  rick-c137-bundle/rick-portal-ui/src/components/panels/StatusPanel.jsx
+    2195  rick-c137-bundle/rick-portal-ui/src/components/viewport/AvatarStage.jsx
      592  rick-c137-bundle/rick-portal-ui/src/components/viewport/AvatarViewport.jsx
      904  rick-c137-bundle/rick-portal-ui/src/components/viewport/PortalBackground.jsx
      787  rick-c137-bundle/rick-portal-ui/src/components/viewport/TelemetryOverlay.jsx
     2210  rick-c137-bundle/rick-portal-ui/src/components/viewport/TwinRickAvatar.jsx
+    3769  rick-c137-bundle/rick-portal-ui/src/components/widgets/WidgetSuite.jsx
     1296  rick-c137-bundle/rick-portal-ui/src/hooks/useAvatarAnimations.js
      198  rick-c137-bundle/rick-portal-ui/src/hooks/useAvatarState.js
      371  rick-c137-bundle/rick-portal-ui/src/hooks/useResponsive.js
      244  rick-c137-bundle/rick-portal-ui/src/main.jsx
      211  rick-c137-bundle/rick-portal-ui/src/state/animationMap.js
      377  rick-c137-bundle/rick-portal-ui/src/state/useUIStore.js
-    2053  rick-c137-bundle/rick-portal-ui/src/styles/globals.css
+    4708  rick-c137-bundle/rick-portal-ui/src/styles/globals.css
      682  rick-c137-bundle/rick-portal-ui/tailwind.config.js
      718  rick-c137-bundle/rick-portal-ui/vite.config.js
      451  rick-c137-bundle/rick-sanchez-voice-platform/.env.example

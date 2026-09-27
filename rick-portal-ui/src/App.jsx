@@ -1,27 +1,29 @@
 import Header from "@layout/Header";
-import DesktopSidebar from "@layout/DesktopSidebar";
+import Sidebar from "@layout/Sidebar";
+import AvatarStage from "@viewport/AvatarStage";
+import RightColumn from "@panels/RightColumn";
+import BottomRow from "@layout/BottomRow";
 import MobileDrawer from "@layout/MobileDrawer";
 import MobileNav from "@layout/MobileNav";
-import PromptBar from "@layout/PromptBar";
-import AvatarViewport from "@viewport/AvatarViewport";
-import TelemetryOverlay from "@viewport/TelemetryOverlay";
+import WidgetSuite from "@components/widgets/WidgetSuite";
+import DesignSystemShowcase from "@components/design/DesignSystemShowcase";
+import { useUIStore } from "@state/useUIStore";
 
 export default function App() {
+  const panel = useUIStore((s) => s.activePanel);
+
+  let center = <AvatarStage />;
+  if (panel === "widgets" || panel === "settings") center = <div style={{ gridArea: "center" }} className="overflow-y-auto"><DesignSystemShowcase /></div>;
+  if (panel === "memory" || panel === "dimensions" || panel === "devices") center = <div style={{ gridArea: "center" }} className="overflow-y-auto"><WidgetSuite /></div>;
+
   return (
-    <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
+    <div className="dash-grid h-screen bg-black text-white">
       <Header />
       <MobileDrawer />
-
-      <div className="flex flex-1 overflow-hidden">
-        <DesktopSidebar />
-
-        <main className="flex-1 relative">
-          <AvatarViewport />
-          <TelemetryOverlay />
-        </main>
-      </div>
-
-      <PromptBar />
+      <Sidebar />
+      {center}
+      <RightColumn />
+      <BottomRow />
       <MobileNav />
     </div>
   );
