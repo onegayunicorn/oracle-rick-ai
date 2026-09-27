@@ -1,6 +1,6 @@
 /**
- * Minimal HTTP handlers for /v1/speech and voice health.
- * Wired into the existing plain-http server (no Express required).
+ * HTTP handlers for /v1/speech and voice health.
+ * Fail-open on personality DSP; 503 only if Piper itself is down.
  */
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -31,9 +31,6 @@ function cors(res: ServerResponse) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-/**
- * Returns true if the request was handled.
- */
 export async function handleVoiceRoutes(
   req: IncomingMessage,
   res: ServerResponse
@@ -51,19 +48,41 @@ export async function handleVoiceRoutes(
   if (req.method === 'GET' && path === '/v1/voice/capabilities') {
     cors(res);
     try {
-      const caps = await listCapabilities();
-      json(res, 200, { capabilities: caps });
+      json(res, 200, { capabilities: await listCapabilities() });
     } catch (e) {
       json(res, 500, { error: String(e) });
     }
     return true;
   }
 
-  if (req.method === 'GET' && (path === '/v1/voice/info' || path === '/v1/voice/health')) {
+  if (
+    req.method === 'GET' &&
+    (path === '/v1/voice/info' || path === '/v1/voice/health')
+  ) {
     cors(res);
     try {
       const health = await voiceHealth();
-      json(res, 200, health);
+      json(res, 200, {
+        ...health,
+        sampleRate: 22050,
+        channels: 1,
+        bitDepth: 16,
+        emotions: [
+          'idle',
+          'rant',
+          'sarcasm',
+          'serious',
+          'drunk',
+          'excited',
+          'tech',
+        ],
+        quantization: 'FP32 reference (INT8/FP16 only after verified ORT quant)',
+        modelFiles: {
+          onnx: process.env.PIPER_MODEL || '/app/models/rick_c137.onnx',
+          config:
+            process.env.PIPER_CONFIG || '/app/models/rick_c137.onnx.json',
+        },
+      });
     } catch (e) {
       json(res, 500, { error: String(e) });
     }
@@ -92,11 +111,25 @@ export async function handleVoiceRoutes(
         speed: typeof body.speed === 'number' ? body.speed : undefined,
         pitch: typeof body.pitch === 'number' ? body.pitch : undefined,
         emotion: body.emotion as SpeechRequest['emotion'],
-        burp_prob: typeof body.burp_prob === 'number' ? body.burp_prob : undefined,
+        burp_prob:
+          typeof body.burp_prob === 'number'
+            ? body.burp_prob
+            : typeof body.burpProb === 'number'
+            ? body.burpProb
+            : undefined,
         variant: body.variant as string | undefined,
+        rawOnly: body.rawOnly === true || body.raw_only === true,
+        seed: typeof body.seed === 'number' ? body.seed : undefined,
       };
 
-      const preferred = body.provider as import('./contract.js').ProviderName | undefined;
+      if (speechReq.rawOnly) {
+        speechReq.emotion = undefined;
+        speechReq.burp_prob = undefined;
+      }
+
+      const preferred = body.provider as
+        | import('./contract.js').ProviderName
+        | undefined;
       const result = await speak(speechReq, preferred);
 
       const mime =
@@ -114,6 +147,10 @@ export async function handleVoiceRoutes(
         'X-Voice-Provider': result.provider,
         'X-Voice-Latency-Ms': String(result.latency_ms),
         'X-Voice-Model': result.model || '',
+        'X-Personality-Applied': result.appliedPersonality || 'none',
+        'X-Fallback': String(!!result.fallback),
+        'X-Sample-Rate': '22050',
+        'X-Channels': '1',
         'Access-Control-Allow-Origin': '*',
       });
       res.end(result.audio);

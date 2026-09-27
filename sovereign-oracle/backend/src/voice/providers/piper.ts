@@ -1,9 +1,18 @@
 /**
- * Piper VoiceProvider — local ONNX TTS
- * Talks to the piper-tts service (default http://piper-tts:8000)
- * which already exposes OpenAI-compatible /v1/audio/speech.
+ * Piper VoiceProvider — local ONNX TTS + optional personality DSP
+ * ================================================================
+ * 1. Call piper-tts HTTP service → raw mono 16-bit 22050 Hz WAV
+ * 2. Optionally run Python prosody CLI (fail-open)
+ * 3. Never 500 on DSP failure — return clean Piper WAV
+ *
+ * Format: mono · 16-bit PCM · 22050 Hz · paired .onnx + .onnx.json
+ * Q4_K_M / Q8_0 are NOT Piper voice formats.
  */
 
+import { spawn } from 'node:child_process';
+import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type {
   SpeechRequest,
   SpeechResponse,
@@ -12,6 +21,12 @@ import type {
 } from '../contract.js';
 
 const PIPER_URL = process.env.PIPER_URL || 'http://piper-tts:8000';
+const PROSODY_PYTHON = process.env.PROSODY_PYTHON || 'python3';
+const PROSODY_MODULE = process.env.PROSODY_MODULE || 'prosody.apply';
+const PROSODY_PATH =
+  process.env.PROSODY_PATH ||
+  join(process.cwd(), 'services/voice-prosody');
+
 const DEFAULT_FORMAT = 'wav' as const;
 
 export class PiperProvider implements VoiceProvider {
@@ -46,18 +61,18 @@ export class PiperProvider implements VoiceProvider {
       available,
       streaming: true,
       formats: ['wav', 'pcm', 'mp3'],
-      emotions: ['idle', 'rant', 'sarcasm', 'serious', 'drunk', 'excited'],
+      emotions: ['idle', 'rant', 'sarcasm', 'serious', 'drunk', 'excited', 'tech'],
       local: true,
-      notes: 'ONNX local; variant selected from verified fp32/fp16/int8 candidates',
+      notes:
+        'ONNX local mono 16-bit 22050 Hz. Personality DSP optional (fail-open). ' +
+        'Variants: FP32 reference; INT8/FP16 only after verified quantization.',
     };
   }
 
   async speak(req: SpeechRequest): Promise<SpeechResponse> {
     const t0 = Date.now();
     const text = (req.input || '').replace(/[*_#`]/g, '').trim();
-    if (!text) {
-      throw new Error('SpeechRequest.input is empty');
-    }
+    if (!text) throw new Error('SpeechRequest.input is empty');
 
     const speed = clamp(req.speed ?? 1.0, 0.5, 2.0);
     const lengthScale = clamp(1.0 / speed, 0.5, 2.0);
@@ -73,8 +88,6 @@ export class PiperProvider implements VoiceProvider {
     if (req.model) body.model = req.model;
     if (req.variant) body.variant = req.variant;
 
-    const format = req.response_format || DEFAULT_FORMAT;
-
     const res = await fetch(`${this.baseUrl}/v1/audio/speech`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'audio/*' },
@@ -86,8 +99,34 @@ export class PiperProvider implements VoiceProvider {
       throw new Error(`Piper TTS ${res.status}: ${errText}`);
     }
 
-    const arrayBuf = await res.arrayBuffer();
-    const audio = Buffer.from(arrayBuf);
+    const rawWav = Buffer.from(await res.arrayBuffer());
+    const format = req.response_format || DEFAULT_FORMAT;
+
+    const rawOnly = req.rawOnly === true;
+    const wantDsp =
+      !rawOnly &&
+      (req.emotion !== undefined ||
+        (req.burp_prob !== undefined && req.burp_prob > 0));
+
+    let audio = rawWav;
+    let appliedPersonality: string | null = null;
+    let fallback = false;
+
+    if (wantDsp) {
+      try {
+        audio = await runProsodyCli(rawWav, {
+          emotion: req.emotion || 'idle',
+          burpProb: req.burp_prob,
+          seed: req.seed,
+        });
+        appliedPersonality = req.emotion || 'idle';
+      } catch (dspErr) {
+        console.warn('[piper] personality DSP failed — returning raw Piper:', dspErr);
+        audio = rawWav;
+        fallback = true;
+        appliedPersonality = null;
+      }
+    }
 
     return {
       audio,
@@ -96,6 +135,8 @@ export class PiperProvider implements VoiceProvider {
       latency_ms: Date.now() - t0,
       sample_rate: 22050,
       model: req.model || 'rick-c137',
+      appliedPersonality,
+      fallback,
     };
   }
 
@@ -106,6 +147,55 @@ export class PiperProvider implements VoiceProvider {
       const part = await this.speak({ ...req, input: s });
       yield new Uint8Array(part.audio);
     }
+  }
+}
+
+async function runProsodyCli(
+  wavBytes: Buffer,
+  opts: { emotion: string; burpProb?: number; seed?: number }
+): Promise<Buffer> {
+  const dir = await mkdtemp(join(tmpdir(), 'rick-prosody-'));
+  const inPath = join(dir, 'raw.wav');
+  const outPath = join(dir, 'out.wav');
+  try {
+    await writeFile(inPath, wavBytes);
+
+    const args = [
+      '-m',
+      PROSODY_MODULE,
+      '-i',
+      inPath,
+      '-o',
+      outPath,
+      '--emotion',
+      opts.emotion,
+    ];
+    if (opts.burpProb !== undefined) {
+      args.push('--burp-prob', String(opts.burpProb));
+    }
+    if (opts.seed !== undefined) {
+      args.push('--seed', String(opts.seed));
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const child = spawn(PROSODY_PYTHON, args, {
+        env: { ...process.env, PYTHONPATH: PROSODY_PATH },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      let stderr = '';
+      child.stderr?.on('data', (c) => {
+        stderr += c.toString();
+      });
+      child.on('error', reject);
+      child.on('close', (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`prosody exit ${code}: ${stderr.slice(0, 400)}`));
+      });
+    });
+
+    return await readFile(outPath);
+  } finally {
+    await rm(dir, { recursive: true, force: true }).catch(() => undefined);
   }
 }
 
@@ -123,7 +213,7 @@ function emotionToPiperBias(emotion?: string) {
     case 'serious':
       return { length: 1.12, noise: 0.5, noise_w: 0.6 };
     case 'drunk':
-      return { length: 1.2, noise: 0.85, noise_w: 1.0 };
+      return { length: 1.15, noise: 0.85, noise_w: 1.0 };
     default:
       return { length: 1.0, noise: 0.667, noise_w: 0.8 };
   }

@@ -3,27 +3,37 @@
  * =====================================================
  * Every TTS backend (Piper, Coqui, Fish, xAI, Browser) implements VoiceProvider.
  * Clients always call POST /v1/speech — never provider-specific endpoints.
+ *
+ * Piper audio format: mono · 16-bit PCM · 22050 Hz WAV
+ * Model pair: rick_c137.onnx + rick_c137.onnx.json
+ * Quantization: FP32 reference; INT8/FP16 only after ORT verification.
+ * Q4_K_M / Q8_0 are NOT Piper voice labels.
  */
 
 export type AudioFormat = 'mp3' | 'wav' | 'pcm' | 'ogg';
-export type Emotion = 'idle' | 'rant' | 'sarcasm' | 'serious' | 'drunk' | 'excited';
+export type Emotion =
+  | 'idle'
+  | 'rant'
+  | 'sarcasm'
+  | 'serious'
+  | 'drunk'
+  | 'excited'
+  | 'tech';
 export type ProviderName = 'piper' | 'coqui' | 'fish' | 'xai' | 'browser';
 
 export interface SpeechRequest {
-  /** Text to synthesise */
   input: string;
-  /** Model id (e.g. "rick-c137", "default") */
   model?: string;
   response_format?: AudioFormat;
-  /** Playback speed 0.5–2.0 (maps to Piper length_scale inverse) */
   speed?: number;
-  /** Pitch shift in semitones −12…+12 (best-effort; not all providers support) */
   pitch?: number;
   emotion?: Emotion;
-  /** Post-process burp injection probability 0.0–0.3 */
   burp_prob?: number;
-  /** Optional voice variant override (Q4_K_M, Q8_0, base, …) */
   variant?: string;
+  /** Skip personality DSP — return unmodified Piper WAV (A/B) */
+  rawOnly?: boolean;
+  /** Deterministic DSP seed */
+  seed?: number;
 }
 
 export interface SpeechResponseMeta {
@@ -32,10 +42,11 @@ export interface SpeechResponseMeta {
   format: AudioFormat;
   sample_rate?: number;
   model?: string;
+  appliedPersonality?: string | null;
+  fallback?: boolean;
 }
 
 export interface SpeechResponse extends SpeechResponseMeta {
-  /** Raw audio bytes */
   audio: Buffer;
 }
 
@@ -49,19 +60,14 @@ export interface VoiceCapabilities {
   notes?: string;
 }
 
-/**
- * Every provider implements exactly this surface.
- */
 export interface VoiceProvider {
   readonly name: ProviderName;
   isAvailable(): Promise<boolean>;
   capabilities(): Promise<VoiceCapabilities>;
   speak(req: SpeechRequest): Promise<SpeechResponse>;
-  /** Optional chunked streaming (sentence-level or PCM frames) */
   stream?(req: SpeechRequest): AsyncIterable<Uint8Array>;
 }
 
-/** Health payload for /v1/voice/capabilities and /healthz enrichment */
 export interface VoiceHealth {
   providers: ProviderName[];
   active: ProviderName | null;
