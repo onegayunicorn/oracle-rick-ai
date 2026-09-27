@@ -53,8 +53,11 @@ services:
         set -a
         . /runtime/model.env
         set +a
-        echo "Piper: ${RICK_MODEL_VARIANT} (${RICK_HW_ARCH}, ${RICK_HW_MEM_MB} MB RAM)"
-        echo "Piper model: ${RICK_MODEL_PATH}"
+        export PIPER_MODEL="$RICK_MODEL_PATH"
+        export PIPER_CONFIG="$RICK_CONFIG_PATH"
+        echo "Piper: $RICK_MODEL_VARIANT ($RICK_HW_ARCH, $RICK_HW_MEM_MB MB RAM)"
+        echo "Piper model: $PIPER_MODEL"
+        echo "Piper config: $PIPER_CONFIG"
         exec python3 -m uvicorn server:app --host 0.0.0.0 --port 8000
     healthcheck:
       test: ["CMD", "python3", "-c", "import json,urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8000/healthz',timeout=3); d=json.load(r); sys.exit(0 if d.get('status') == 'ok' else 1)"]
